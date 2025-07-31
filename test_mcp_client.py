@@ -13,27 +13,115 @@ async def test_mcp_server(use_deployed=False):
     if use_deployed:
         print("🔗 Testing Deployed Acme Laser Guns MCP Server")
         print("🌐 URL: https://mcp-games.onrender.com")
-        print("❌ HTTP MCP client not available - using direct HTTP requests instead")
+        print("✅ Using proper MCP session management")
         print("=" * 50)
         
-        # For deployed server, we'll use HTTP requests
-        
         base_url = "https://mcp-games.onrender.com"
+        session_id = None
         
-        print("1️⃣ Testing: Get all laser guns")
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/event-stream"
+        }
+        
+        # Step 1: Initialize session
+        print("🔄 Initializing MCP session...")
         try:
-            response = requests.post(f"{base_url}/mcp/", json={
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "tools/call",
-                "params": {"name": "get_all_laser_guns", "arguments": {}}
-            }, timeout=10)
+            init_response = requests.post(f"{base_url}/mcp/", 
+                headers=headers,
+                json={
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {},
+                        "clientInfo": {"name": "test-client", "version": "1.0"}
+                    }
+                }, timeout=10)
+            
+            if init_response.status_code == 200:
+                # Parse SSE response
+                response_text = init_response.text
+                if "data: " in response_text:
+                    json_data = response_text.split("data: ")[1].strip()
+                    init_data = json.loads(json_data)
+                    if "result" in init_data:
+                        print(f"✅ Session initialized! Server: {init_data['result']['serverInfo']['name']}")
+                        # Extract session ID from cookies or headers if available
+                        session_id = init_response.cookies.get('session_id') or 'test-session'
+                    else:
+                        print(f"❌ Initialization failed: {init_data}")
+                        return
+                else:
+                    print(f"❌ Unexpected response format: {response_text}")
+                    return
+            else:
+                print(f"❌ Initialization failed: {init_response.status_code}")
+                return
+        except Exception as e:
+            print(f"❌ Initialization failed: {e}")
+            return
+        
+        # Keep the same session for subsequent requests (FastMCP may auto-manage sessions)
+        
+        # Step 2: List available tools
+        print("\n📋 Listing available tools...")
+        try:
+            tools_response = requests.post(f"{base_url}/mcp/", 
+                headers=headers,
+                json={
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/list",
+                    "params": {}
+                }, timeout=10)
+            
+            if tools_response.status_code == 200:
+                response_text = tools_response.text
+                if "data: " in response_text:
+                    json_data = response_text.split("data: ")[1].strip()
+                    tools_data = json.loads(json_data)
+                    if "result" in tools_data and "tools" in tools_data["result"]:
+                        tools = tools_data["result"]["tools"]
+                        print(f"✅ Found {len(tools)} tools:")
+                        for tool in tools:
+                            print(f"  - {tool['name']}: {tool['description']}")
+                    else:
+                        print(f"❌ Tools list failed: {tools_data}")
+                else:
+                    print(f"❌ Unexpected tools response: {response_text}")
+            else:
+                print(f"❌ Tools list failed: {tools_response.status_code}")
+        except Exception as e:
+            print(f"❌ Tools list failed: {e}")
+        
+        # Step 3: Test tool calls
+        print("\n1️⃣ Testing: Get all laser guns")
+        try:
+            response = requests.post(f"{base_url}/mcp/", 
+                headers=headers,
+                json={
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/call",
+                    "params": {"name": "get_all_laser_guns", "arguments": {}}
+                }, timeout=10)
             
             if response.status_code == 200:
-                data = response.json()["result"]
-                print(f"✅ Found {len(data)} laser guns:")
-                for model, specs in data.items():
-                    print(f"  - {specs['name']} ({specs['model']}) - {specs['price']}")
+                response_text = response.text
+                if "data: " in response_text:
+                    json_data = response_text.split("data: ")[1].strip()
+                    result_data = json.loads(json_data)
+                    if "result" in result_data:
+                        data = json.loads(result_data["result"]["content"][0]["text"])
+                        print(f"✅ Found {len(data)} laser guns:")
+                        for model, specs in data.items():
+                            print(f"  - {specs['name']} ({specs['model']}) - {specs['price']}")
+                    else:
+                        print(f"❌ Tool call failed: {result_data}")
+                else:
+                    print(f"❌ Unexpected response: {response_text}")
             else:
                 print(f"❌ Error: {response.status_code}")
         except Exception as e:
@@ -41,18 +129,29 @@ async def test_mcp_server(use_deployed=False):
             
         print("\n2️⃣ Testing: Get company info")
         try:
-            response = requests.post(f"{base_url}/mcp/", json={
-                "jsonrpc": "2.0",
-                "id": 2,
-                "method": "tools/call",
-                "params": {"name": "get_acme_corp_info", "arguments": {}}
-            }, timeout=10)
+            response = requests.post(f"{base_url}/mcp/", 
+                headers=headers,
+                json={
+                    "jsonrpc": "2.0",
+                    "id": 4,
+                    "method": "tools/call",
+                    "params": {"name": "get_acme_corp_info", "arguments": {}}
+                }, timeout=10)
             
             if response.status_code == 200:
-                data = response.json()["result"]
-                print(f"✅ Company: {data['company']}")
-                print(f"   Division: {data['division']}")
-                print(f"   Total models: {data['total_models']}")
+                response_text = response.text
+                if "data: " in response_text:
+                    json_data = response_text.split("data: ")[1].strip()
+                    result_data = json.loads(json_data)
+                    if "result" in result_data:
+                        data = json.loads(result_data["result"]["content"][0]["text"])
+                        print(f"✅ Company: {data['company']}")
+                        print(f"   Division: {data['division']}")
+                        print(f"   Total models: {data['total_models']}")
+                    else:
+                        print(f"❌ Tool call failed: {result_data}")
+                else:
+                    print(f"❌ Unexpected response: {response_text}")
             else:
                 print(f"❌ Error: {response.status_code}")
         except Exception as e:
