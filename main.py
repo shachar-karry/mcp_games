@@ -49,4 +49,4 @@ if __name__ == "__main__":
     # Run the server with HTTP transport for web deployment
     import os
     port = int(os.environ.get("PORT", 8000))
-    server.run(transport="http", port=port) 
+    server.run(transport="http", host="0.0.0.0", port=port) 
