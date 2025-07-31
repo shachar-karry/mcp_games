@@ -2,13 +2,66 @@
 
 import asyncio
 import json
+import sys
+import requests
 from mcp import ClientSession, StdioServerParameters
 from mcp import stdio_client
 
-async def test_mcp_server():
+async def test_mcp_server(use_deployed=False):
     """Test the MCP server using the MCP protocol."""
     
-    print("🔗 Connecting to Acme Laser Guns MCP Server")
+    if use_deployed:
+        print("🔗 Testing Deployed Acme Laser Guns MCP Server")
+        print("🌐 URL: https://mcp-games.onrender.com")
+        print("❌ HTTP MCP client not available - using direct HTTP requests instead")
+        print("=" * 50)
+        
+        # For deployed server, we'll use HTTP requests
+        
+        base_url = "https://mcp-games.onrender.com"
+        
+        print("1️⃣ Testing: Get all laser guns")
+        try:
+            response = requests.post(f"{base_url}/mcp", json={
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tools/call",
+                "params": {"name": "get_all_laser_guns", "arguments": {}}
+            }, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()["result"]
+                print(f"✅ Found {len(data)} laser guns:")
+                for model, specs in data.items():
+                    print(f"  - {specs['name']} ({specs['model']}) - {specs['price']}")
+            else:
+                print(f"❌ Error: {response.status_code}")
+        except Exception as e:
+            print(f"❌ Request failed: {e}")
+            
+        print("\n2️⃣ Testing: Get company info")
+        try:
+            response = requests.post(f"{base_url}/mcp", json={
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tools/call",
+                "params": {"name": "get_acme_corp_info", "arguments": {}}
+            }, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()["result"]
+                print(f"✅ Company: {data['company']}")
+                print(f"   Division: {data['division']}")
+                print(f"   Total models: {data['total_models']}")
+            else:
+                print(f"❌ Error: {response.status_code}")
+        except Exception as e:
+            print(f"❌ Request failed: {e}")
+            
+        print("\n✅ Deployed server test completed!")
+        return
+    
+    print("🔗 Connecting to Local Acme Laser Guns MCP Server")
     print("=" * 50)
     
     # Connect to the server using stdio transport
@@ -94,4 +147,10 @@ async def test_mcp_server():
             print("\n✅ All MCP server tests completed!")
 
 if __name__ == "__main__":
-    asyncio.run(test_mcp_server()) 
+    # Check command line arguments
+    use_deployed = len(sys.argv) > 1 and sys.argv[1] == "--deployed"
+    
+    if use_deployed:
+        asyncio.run(test_mcp_server(use_deployed=True))
+    else:
+        asyncio.run(test_mcp_server(use_deployed=False)) 

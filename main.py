@@ -46,5 +46,7 @@ def get_acme_corp_info():
     return laser_interface.get_acme_corp_info()
 
 if __name__ == "__main__":
-    # Run the server
-    server.run() 
+    # Run the server with HTTP transport for web deployment
+    import os
+    port = int(os.environ.get("PORT", 8000))
+    server.run(transport="http", port=port) 
