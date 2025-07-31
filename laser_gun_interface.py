@@ -2,13 +2,18 @@
 
 import json
 import random
+import os
 from typing import Dict, List, Optional
 
 class LaserGunInterface:
     """Interface for accessing and querying laser gun data from Acme Corp."""
     
-    def __init__(self, data_file: str = 'laser_guns.json'):
+    def __init__(self, data_file: str = None):
         """Initialize the interface with laser gun data."""
+        if data_file is None:
+            # Use absolute path to the JSON file in the same directory as this script
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            data_file = os.path.join(script_dir, 'laser_guns.json')
         self.data_file = data_file
         self.laser_guns = self._load_laser_guns()
     
