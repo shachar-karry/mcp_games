@@ -22,7 +22,7 @@ async def test_mcp_server(use_deployed=False):
         
         print("1️⃣ Testing: Get all laser guns")
         try:
-            response = requests.post(f"{base_url}/mcp", json={
+            response = requests.post(f"{base_url}/mcp/", json={
                 "jsonrpc": "2.0",
                 "id": 1,
                 "method": "tools/call",
@@ -41,7 +41,7 @@ async def test_mcp_server(use_deployed=False):
             
         print("\n2️⃣ Testing: Get company info")
         try:
-            response = requests.post(f"{base_url}/mcp", json={
+            response = requests.post(f"{base_url}/mcp/", json={
                 "jsonrpc": "2.0",
                 "id": 2,
                 "method": "tools/call",
@@ -67,7 +67,7 @@ async def test_mcp_server(use_deployed=False):
     # Connect to the server using stdio transport
     server_params = StdioServerParameters(
         command="python",
-        args=["main.py"]
+        args=["main_local.py"]
     )
     
     async with stdio_client(server_params) as (read, write):
