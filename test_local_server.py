@@ -4,7 +4,6 @@ import json
 import requests
 import subprocess
 import time
-import signal
 import os
 import sys
 
@@ -33,7 +32,7 @@ def test_local_server():
             print(f"❌ Server failed to start!")
             print(f"STDOUT: {stdout}")
             print(f"STDERR: {stderr}")
-            return False
+            assert False, "Server failed to start"
         
         # Test server health
         print("🏥 Testing server health...")
@@ -68,33 +67,28 @@ def test_local_server():
                     }
                 }, timeout=10)
             
-            if init_response.status_code == 200:
-                # Extract session ID from header
-                session_id = init_response.headers.get('mcp-session-id')
-                print(f"✅ Session initialized! Server: acme-laser-guns-server")
-                print(f"Session ID: {session_id}")
-                
-                # Parse SSE response
-                response_text = init_response.text
-                if "data: " in response_text:
-                    json_data = response_text.split("data: ")[1].strip()
-                    init_data = json.loads(json_data)
-                    if "result" in init_data:
-                        server_info = init_data["result"]["serverInfo"]
-                        print(f"Server version: {server_info['version']}")
-                        print(f"Protocol version: {init_data['result']['protocolVersion']}")
-                    else:
-                        print(f"❌ Initialization failed: {init_data}")
-                        return False
-                else:
-                    print(f"❌ Unexpected response format: {response_text}")
-                    return False
-            else:
-                print(f"❌ Initialization failed: {init_response.status_code}")
-                return False
+            assert init_response.status_code == 200, f"Initialization failed: {init_response.status_code}"
+            
+            # Extract session ID from header
+            session_id = init_response.headers.get('mcp-session-id')
+            print(f"✅ Session initialized! Server: acme-laser-guns-server")
+            print(f"Session ID: {session_id}")
+            
+            # Parse SSE response
+            response_text = init_response.text
+            assert "data: " in response_text, f"Unexpected response format: {response_text}"
+            
+            json_data = response_text.split("data: ")[1].strip()
+            init_data = json.loads(json_data)
+            assert "result" in init_data, f"Initialization failed: {init_data}"
+            
+            server_info = init_data["result"]["serverInfo"]
+            print(f"Server version: {server_info['version']}")
+            print(f"Protocol version: {init_data['result']['protocolVersion']}")
+            
         except Exception as e:
             print(f"❌ Initialization failed: {e}")
-            return False
+            assert False, f"Initialization failed: {e}"
         
         # Add session ID to headers for subsequent requests
         if session_id:
@@ -125,7 +119,6 @@ def test_local_server():
             print(f"⚠️  Tools list error: {e}")
         
         print("\n🎯 Local server test completed successfully!")
-        return True
         
     finally:
         # Clean up: stop the server
@@ -138,5 +131,4 @@ def test_local_server():
         print("✅ Server stopped")
 
 if __name__ == "__main__":
-    success = test_local_server()
-    sys.exit(0 if success else 1) 
+    test_local_server() 
