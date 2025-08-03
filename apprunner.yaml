@@ -7,6 +7,6 @@ build:
       - pip3 install -r requirements.txt
 
 run:
-  command: uvicorn main:app --host 0.0.0.0 --port 8000   # ← uses main.py
+  command: python -m uvicorn main:app --host 0.0.0.0 --port 8000
   network:
     port: 8000
