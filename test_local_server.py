@@ -4,7 +4,6 @@ import json
 import requests
 import subprocess
 import time
-import os
 import sys
 
 def test_local_server():

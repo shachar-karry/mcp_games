@@ -1,0 +1,75 @@
+service: mcp-games-lambda-${opt:stage, 'dev'}
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.10
+  region: us-east-2
+  memorySize: 1024
+  timeout: 40 
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "*"
+  httpApi:
+    cors: true
+
+functions:
+  mcp-server:
+    handler: main.handler
+    reservedConcurrency: 10  # Limit concurrent executions
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: ANY
+    environment:
+      MCP_SERVER_NAME: acme-laser-guns-server
+      LOG_LEVEL: INFO
+
+package:
+  individually: true
+  exclude:
+    - node_modules/**
+    - venv/**
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    useStaticCache: false
+    # build & run containers – ONE list of strings each
+    dockerBuildCmdExtraArgs:
+      - "--platform=linux/amd64"
+    dockerRunCmdExtraArgs:
+      - "--platform=linux/amd64"
+
+    # pip flags – also ONE flat list
+    pipCmdExtraArgs:
+      - "--platform"
+      - "manylinux2014_x86_64"
+      - "--only-binary=:all:"
+
+
+    # Bundle everything in main package
+    noDeploy:
+      - boto3
+      - botocore
+      - jmespath
+      - python-dateutil
+      - s3transfer
+      - six
+      - urllib3
+      - coverage
+      - pytest
+      - pytest-asyncio
+  deployment:
+    maxConcurrency: 1
+    maxErrors: 0 
