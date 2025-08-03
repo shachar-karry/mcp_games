@@ -4,4 +4,4 @@ mangum>=0.17.0
 typing-extensions>=4.0.0
 pytest>=7.0.0
 requests>=2.25.0
-
+uvicorn[standard]>=0.13
