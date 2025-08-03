@@ -44,7 +44,7 @@ plugins:
 custom:
   pythonRequirements:
     dockerizePip: true
-    useStaticCache: false
+    # useStaticCache: false
     # build & run containers – ONE list of strings each
     dockerBuildCmdExtraArgs:
       - "--platform=linux/amd64"
