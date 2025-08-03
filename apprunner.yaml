@@ -1,0 +1,21 @@
+version: 1.0
+
+runtime: python3           # App Runner's source-build runtime
+
+build:
+  commands:
+    - pip install -r requirements.txt
+
+run:
+  command: uvicorn main:app --host 0.0.0.0 --port 8000   # ← uses main.py
+  network:
+    port: 8000
+
+instance_configuration:
+  cpu: 512        # 0.5 vCPU
+  memory: 1024    # 1 GiB RAM
+
+autoscaling:
+  max_concurrency: 100
+  min_size: 0      # scale to zero when idle
+  max_size: 2
