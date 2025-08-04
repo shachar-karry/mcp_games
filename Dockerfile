@@ -1,5 +1,5 @@
-# Use official Python slim image for minimal size
-FROM python:3.11-slim
+# Use official Python slim image for minimal size (cross-platform compatible)
+FROM --platform=linux/amd64 python:3.11-slim
 
 # Set working directory
 WORKDIR /app

@@ -6,12 +6,12 @@ import requests
 
 def test_mcp_server():
     """Test the deployed MCP server using HTTP requests (synchronous)."""
-    print("🔗 Testing Deployed Acme Laser Guns MCP Server")
-    print("🌐 URL: https://mcp-games.onrender.com")
+    print("🔗 Testing AWS App Runner Deployed MCP Server")
+    print("🌐 URL: https://q87vidpvch.us-east-2.awsapprunner.com")
     print("✅ Using proper MCP session management")
     print("=" * 50)
     
-    base_url = "https://mcp-games.onrender.com"
+    base_url = "https://q87vidpvch.us-east-2.awsapprunner.com"
     session_id = None
     
     # Use a session to maintain cookies across requests
