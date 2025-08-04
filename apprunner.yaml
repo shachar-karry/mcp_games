@@ -4,7 +4,7 @@ runtime: python311
 build:
   commands:
     build:
-      - python3 -m pip3 install --target /root/.python_packages/lib/site-packages -r requirements.txt
+      - python3 -m pip install --target /root/.python_packages/lib/site-packages -r requirements.txt
 
 run:
   command: python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
